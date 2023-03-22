@@ -6,11 +6,13 @@ let sheets;
 
 const create_range = (range) => `${SHEET_NAME}${range ? "!" : ""}${range ? range: ""}`;
 
-const get_sheets_value = (range) => {
-  return sheets.spreadsheets.values.get({
+const get_sheets_value = async (range) => {
+  const response = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: create_range(range),
   });
+
+  return response.data.values;
 };
 
 const append_rows = (data, range) => {
@@ -30,9 +32,9 @@ async function init_sheet_oerations() {
   /*
   READ FROM GOOGLE SHEET
   */
-  const res = await get_sheets_value(`A1:A5`);
-  const rows = res.data.values;
+  const rows = await get_sheets_value(`A1:A5`);
   console.log(rows);
+
   if (!rows || rows.length === 0) {
     console.log("No data found.");
     return;
