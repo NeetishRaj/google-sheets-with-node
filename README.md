@@ -9,7 +9,7 @@ https://developers.google.com/workspace/guides/create-project
 Step 2: Enable the "Google Sheets API" inside the project created above.
 https://developers.google.com/workspace/guides/enable-apis
 
-Step 3: Create a Credential for Nodejs
+Step 3: Get a 'credentials.json' file for Nodejs app from Google console.
 https://developers.google.com/sheets/api/quickstart/nodejs
 
 Step 4: Make sure your email is added as user in consent screen.
