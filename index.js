@@ -1,85 +1,36 @@
-const fs = require("fs").promises;
-const path = require("path");
-const process = require("process");
-const { authenticate } = require("@google-cloud/local-auth");
-const { google } = require("googleapis");
+const get_sheets = require("./authorize");
 
-// If modifying these scopes, delete token.json.
-const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
-const TOKEN_PATH = path.join(process.cwd(), "token.json");
-const CREDENTIALS_PATH = path.join(process.cwd(), "credentials.json");
+const SPREADSHEET_ID = "1Ga-jjdokaOguy_ySLjJ8SXldQTKWA31QEPRZnGsgnIs";
+const SHEET_NAME = "scraped_data";
+let sheets;
 
-/**
- * Reads previously authorized credentials from the save file.
- *
- * @return {Promise<OAuth2Client|null>}
- */
-async function loadSavedCredentialsIfExist() {
-  try {
-    const content = await fs.readFile(TOKEN_PATH);
-    const credentials = JSON.parse(content);
-    return google.auth.fromJSON(credentials);
-  } catch (err) {
-    return null;
-  }
-}
+const create_range = (range) => `${SHEET_NAME}${range ? "!" : ""}${range ? range: ""}`;
 
-/**
- * Serializes credentials to a file comptible with GoogleAUth.fromJSON.
- *
- * @param {OAuth2Client} client
- * @return {Promise<void>}
- */
-async function saveCredentials(client) {
-  const content = await fs.readFile(CREDENTIALS_PATH);
-  const keys = JSON.parse(content);
-  const key = keys.installed || keys.web;
-  const payload = JSON.stringify({
-    type: "authorized_user",
-    client_id: key.client_id,
-    client_secret: key.client_secret,
-    refresh_token: client.credentials.refresh_token,
+const get_sheets_value = (range) => {
+  return sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: create_range(range),
   });
-  await fs.writeFile(TOKEN_PATH, payload);
-}
+};
 
-/**
- * Load or request or authorization to call APIs.
- *
- */
-async function authorize() {
-  let client = await loadSavedCredentialsIfExist();
-  if (client) {
-    return client;
-  }
-  client = await authenticate({
-    scopes: SCOPES,
-    keyfilePath: CREDENTIALS_PATH,
+const append_rows = (data, range) => {
+  return sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: create_range(range),
+    valueInputOption: "RAW",
+    resource: {
+      values: [data],
+    },
   });
-  if (client.credentials) {
-    await saveCredentials(client);
-  }
-  return client;
-}
+};
 
-/**
- * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
- */
-async function listMajors(auth) {
-  const sheets = google.sheets({ version: "v4", auth });
+async function init_sheet_oerations() {
+  sheets = await get_sheets();
 
   /*
   READ FROM GOOGLE SHEET
   */
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: "1Ga-jjdokaOguy_ySLjJ8SXldQTKWA31QEPRZnGsgnIs",
-    range: "scraped_data!A1:A10",
-  });
+  const res = await get_sheets_value(`A1:A5`);
   const rows = res.data.values;
   console.log(rows);
   if (!rows || rows.length === 0) {
@@ -92,21 +43,13 @@ async function listMajors(auth) {
     console.log(`${row[0]}, ${row[4]}`);
   });
 
-
   /*
   APPEND ROWS TO GOOGLE SHEET
   */
-  const data = [1, 2, 3]
-  const res2 = await sheets.spreadsheets.values.append({
-    spreadsheetId: "1Ga-jjdokaOguy_ySLjJ8SXldQTKWA31QEPRZnGsgnIs",
-    range: "scraped_data",
-    valueInputOption: 'RAW',
-    resource: {
-      values: [data]
-    }
-  })
+  const data = [1, 2, 3];
+  const res2 = await append_rows(data);
 
   console.log(res2);
 }
 
-authorize().then(listMajors).catch(console.error);
+init_sheet_oerations();
