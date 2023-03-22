@@ -21,6 +21,7 @@ npm install googleapis@105 @google-cloud/local-auth@2.1.0 --save
 ```
 
 Step 6: Copy and run the sample code in index.js
+Remember to update the proper google sheet id.
 ```
 node index.js
 ```

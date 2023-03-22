@@ -72,11 +72,16 @@ async function authorize() {
  */
 async function listMajors(auth) {
   const sheets = google.sheets({ version: "v4", auth });
+
+  /*
+  READ FROM GOOGLE SHEET
+  */
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: "1Ga-jjdokaOguy_ySLjJ8SXldQTKWA31QEPRZnGsgnIs",
-    range: "A1:A10",
+    range: "scraped_data!A1:A10",
   });
   const rows = res.data.values;
+  console.log(rows);
   if (!rows || rows.length === 0) {
     console.log("No data found.");
     return;
@@ -86,6 +91,22 @@ async function listMajors(auth) {
     // Print columns A and E, which correspond to indices 0 and 4.
     console.log(`${row[0]}, ${row[4]}`);
   });
+
+
+  /*
+  APPEND ROWS TO GOOGLE SHEET
+  */
+  const data = [1, 2, 3]
+  const res2 = await sheets.spreadsheets.values.append({
+    spreadsheetId: "1Ga-jjdokaOguy_ySLjJ8SXldQTKWA31QEPRZnGsgnIs",
+    range: "scraped_data",
+    valueInputOption: 'RAW',
+    resource: {
+      values: [data]
+    }
+  })
+
+  console.log(res2);
 }
 
 authorize().then(listMajors).catch(console.error);
